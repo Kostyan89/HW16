@@ -1,4 +1,5 @@
-from flask import Flask
+import json
+from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
 import raw_data
 
@@ -35,18 +36,18 @@ class User(db.Model):
 class Order(db.Model):
     __tablename__ = 'order'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50))
-    description = db.Column(db.String(200))
+    name = db.Column(db.Text(50))
+    description = db.Column(db.Text(200))
     start_date = db.Column(db.Date)
     end_date = db.Column(db.Date)
-    address = db.Column(db.String(200))
-    price = db.Column(db.Float)
+    address = db.Column(db.Text(70))
+    price = db.Column(db.Integer)
     customer_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     executor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     def to_dict(self):
         return {
-            "id": self.id,
+            "id":self.id,
             "name": self.name,
             "description": self.description,
             "start_date": self.start_date,
@@ -113,6 +114,14 @@ for offer_data in raw_data.offers:
     )
     db.session.add(new_offer)
     db.session.commit()
+
+
+@app.route("/user/<int:id>", methods=['GET','POST', 'DELETE', 'PUT'])
+def user(id):
+    if request.method == "GET":
+        return json.dumps(User.query.get(id).to_dict()), 200,{'Content-Type':'application/json; charset=UTF-8'}
+
+
 
 
 if __name__ == '__main__':
