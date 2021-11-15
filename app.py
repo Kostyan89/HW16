@@ -2,6 +2,7 @@ import json
 from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
 import raw_data
+from datetime import datetime, date
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///table.db'
@@ -91,17 +92,17 @@ for user_data in raw_data.users:
     db.session.commit()
 
 
-for order_data in raw_data.orders:
+for order in raw_data.orders:
     new_order = Order(
-        id=order_data['id'],
-        name=order_data['name'],
-        description=order_data['description'],
-        start_date=order_data['start_date'],
-        end_date=order_data['end_date'],
-        address=order_data['address'],
-        price=order_data['price'],
-        customer_id=order_data['customer_id'],
-        executor_id=order_data['executor_id']
+        id=order['id'],
+        name=order['name'],
+        description=order['description'],
+        start_date=datetime.date(int(order['start_date'])),
+        end_date=datetime.date(int(order[('end_date', ""%d/%m/%y"]),
+        address=order['address'],
+        price=order['price'],
+        customer_id=order['customer_id'],
+        executor_id=order['executor_id']
     )
     db.session.add(new_order)
     db.session.commit()
