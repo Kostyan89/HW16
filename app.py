@@ -39,8 +39,8 @@ class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text(50))
     description = db.Column(db.Text(200))
-    start_date = db.Column(db.Date)
-    end_date = db.Column(db.Date)
+    start_date = db.Column(db.Integer)
+    end_date = db.Column(db.Integer)
     address = db.Column(db.Text(70))
     price = db.Column(db.Integer)
     customer_id = db.Column(db.Integer, db.ForeignKey('user.id'))
@@ -97,8 +97,8 @@ for order in raw_data.orders:
         id=order['id'],
         name=order['name'],
         description=order['description'],
-        start_date=datetime.date(int(order['start_date'])),
-        end_date=datetime.date(int(order[('end_date', ""%d/%m/%y"]),
+        start_date=order['start_date'],
+        end_date=order['end_date'],
         address=order['address'],
         price=order['price'],
         customer_id=order['customer_id'],
