@@ -117,12 +117,131 @@ for offer_data in raw_data.offers:
     db.session.commit()
 
 
+@app.route('/users', methods=['GET', 'POST'])
+def users():
+    if request.method == "GET":
+        result = []
+        for u in User.query.all():
+            result.append(u.to_dict())
+        return json.dumps(result), 200,{'Content-Type':'application/json; charset=UTF-8'}
+    if request.method == "POST":
+        new_user = User(
+            id=request.args.get("id"),
+            first_name=request.args.get("first_name"),
+            last_name=request.args.get("last_name"),
+            age=request.args.get("age"),
+            email=request.args.get("email"),
+            role=request.args.get("role"),
+            phone=request.args.get("phone")
+        )
+        db.session.add(new_user)
+        db.session.commit()
+        return "", 204
+
+
 @app.route("/user/<int:id>", methods=['GET','POST', 'DELETE', 'PUT'])
 def user(id):
     if request.method == "GET":
-        return json.dumps(User.query.get(id).to_dict()), 200,{'Content-Type':'application/json; charset=UTF-8'}
+        return json.dumps(User.query.get(id).to_dict), 200,{'Content-Type':'application/json; charset=UTF-8'}
+    if request.method == "POST":
+        new_user = User(
+            id=request.args.get("id"),
+            first_name=request.args.get("first_name"),
+            last_name=request.args.get("last_name"),
+            age=request.args.get("age"),
+            email=request.args.get("email"),
+            role=request.args.get("role"),
+            phone=request.args.get("phone")
+        )
+        db.session.add(new_user)
+        db.session.commit()
+        return "", 204
 
 
+@app.route("/orders", methods=['GET','POST'])
+def orders():
+    if request.method == "GET":
+        res =[]
+        for ord in Order.query.all():
+            res.append(ord.to_dict())
+        return json.dumps(res), 200,{'Content-Type':'application/json; charset=UTF-8'}
+    elif request.method == "POST":
+        order = json.loads(request.data)
+        new_order = Order(
+            id=order["id"],
+            name=order["name"],
+            description=order["description"],
+            start_date=order["start_date"],
+            end_date=order["end_date"],
+            address=order["address"],
+            price=order["price"],
+            customer_id=order["customer_id"],
+            executor_id=order["executor_id"],
+        )
+        return "", 204
+
+
+@app.route("/order/<int:id>", methods=['GET','POST', 'DELETE', 'PUT'])
+def order(id):
+    if request.method == "GET":
+        return json.dumps(Order.query.get(id).to_dict()), 200
+    elif request.method == 'DELETE':
+        order = Order.query.get(id)
+        db.session.delete(order)
+        db.session.commit()
+        return "",204
+    elif request.method == 'PUT':
+        order = json.loads(request.data)
+        ord = Order.query.get(id)
+        ord.id = order["id"],
+        ord.name = order["name"],
+        ord.description = order["description"],
+        ord.start_date = order["start_date"],
+        ord.end_date = order["end_date"],
+        ord.address = order["address"],
+        ord.price = order["price"],
+        ord.customer_id = order["customer_id"],
+        ord.executor_id = order["executor_id"]
+        db.session.add(ord)
+        db.session.commit()
+        return "", 204
+
+
+@app.route("/offers", methods=['GET','POST'])
+def offers():
+    if request.method == "GET":
+        res =[]
+        for ofe in Offer.query.all():
+            res.append(ofe.to_dict())
+        return json.dumps(res), 200
+    elif request.method == "POST":
+        offer = json.loads(request.data)
+        new_offer = Offer(
+            id=offer["id"],
+            order_id=offer["order_id"],
+            executor_id=offer["executor_id"],
+        )
+        return "", 204
+
+
+@app.route("/offer/<int:id>", methods=['GET','POST', 'DELETE', 'PUT'])
+def offer(id):
+    if request.method == "GET":
+        return json.dumps(Offer.query.get(id).to_dict()), 200
+    elif request.method == 'DELETE':
+        offer = Offer.query.get(id)
+        db.session.delete(offer)
+        db.session.commit()
+        return "",204
+    elif request.method == 'PUT':
+        offer = json.loads(request.data)
+        off = Offer.query.get(id)
+        off.id = offer["id"],
+        off.order_id = offer["order_id"],
+        off.executor_id = offer["executor_id"]
+        db.session.add(off)
+        db.session.commit()
+        return "", 204,{'Content-Type':'application/json; charset=UTF-8'}
 
 
 if __name__ == '__main__':
