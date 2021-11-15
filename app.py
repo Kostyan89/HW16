@@ -2,7 +2,7 @@ import json
 from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
 import raw_data
-from datetime import datetime, date
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///table.db'
@@ -184,7 +184,7 @@ def orders():
 @app.route("/order/<int:id>", methods=['GET','POST', 'DELETE', 'PUT'])
 def order(id):
     if request.method == "GET":
-        return json.dumps(Order.query.get(id).to_dict()), 200
+        return json.dumps(Order.query.get(id).to_dict()), 200,{'Content-Type':'application/json; charset=UTF-8'}
     elif request.method == 'DELETE':
         order = Order.query.get(id)
         db.session.delete(order)
@@ -213,7 +213,7 @@ def offers():
         res =[]
         for ofe in Offer.query.all():
             res.append(ofe.to_dict())
-        return json.dumps(res), 200
+        return json.dumps(res), 200,{'Content-Type':'application/json; charset=UTF-8'}
     elif request.method == "POST":
         offer = json.loads(request.data)
         new_offer = Offer(
