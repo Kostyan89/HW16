@@ -1,120 +1,15 @@
 import json
-from flask import Flask, request
+from models import User, Order, Offer
+from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
-import raw_data
 
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///table.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['JSON_AS_ASCII'] = False
+app.config.from_object()
 app.url_map.strict_slashes = False
+
+
 db = SQLAlchemy(app)
-
-
-class User(db.Model):
-    __tablename__ = 'user'
-    id = db.Column(db.Integer, primary_key=True)
-    first_name = db.Column(db.String(50))
-    last_name = db.Column(db.String(50))
-    age = db.Column(db.Integer)
-    email = db.Column(db.String(50))
-    role = db.Column(db.String(50))
-    phone = db.Column(db.Integer)
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "first.name": self.first_name,
-            "last_name": self.last_name,
-            "age": self.age,
-            "email": self.email,
-            "role": self.role,
-            "phone": self.phone
-        }
-
-
-class Order(db.Model):
-    __tablename__ = 'order'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.Text(50))
-    description = db.Column(db.Text(200))
-    start_date = db.Column(db.Integer)
-    end_date = db.Column(db.Integer)
-    address = db.Column(db.Text(70))
-    price = db.Column(db.Integer)
-    customer_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    executor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-
-    def to_dict(self):
-        return {
-            "id":self.id,
-            "name": self.name,
-            "description": self.description,
-            "start_date": self.start_date,
-            "end_date": self.end_date,
-            "address": self.address,
-            "price": self.price,
-            "customer_id": self.customer_id,
-            "executor_id": self.executor_id
-        }
-
-
-class Offer(db.Model):
-    __tablename__ = 'offer'
-    id = db.Column(db.Integer, primary_key=True)
-    order_id = db.Column(db.Integer, db.ForeignKey('order.id'))
-    executor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-
-    def to_dict(self):
-        return {
-            "id" : self.id,
-            "order_id" : self.order_id,
-            "executor_id" : self.executor_id
-        }
-
-
-db.drop_all()
-db.create_all()
-
-
-for user_data in raw_data.users:
-    new_user = User(
-        id=user_data['id'],
-        first_name=user_data['first_name'],
-        last_name=user_data['last_name'],
-        age=user_data['first_name'],
-        email=user_data['first_name'],
-        role=user_data['first_name'],
-        phone=user_data["phone"]
-    )
-    db.session.add(new_user)
-    db.session.commit()
-
-
-for order in raw_data.orders:
-    new_order = Order(
-        id=order['id'],
-        name=order['name'],
-        description=order['description'],
-        start_date=order['start_date'],
-        end_date=order['end_date'],
-        address=order['address'],
-        price=order['price'],
-        customer_id=order['customer_id'],
-        executor_id=order['executor_id']
-    )
-    db.session.add(new_order)
-    db.session.commit()
-
-for offer_data in raw_data.offers:
-    new_offer = Offer(
-        id=offer_data['id'],
-        order_id=offer_data['order_id'],
-        executor_id=offer_data['executor_id'],
-    )
-    db.session.add(new_offer)
-    db.session.commit()
 
 
 @app.route('/users', methods=['GET', 'POST'])
@@ -123,50 +18,57 @@ def users():
         result = []
         for u in User.query.all():
             result.append(u.to_dict())
-        return json.dumps(result), 200,{'Content-Type':'application/json; charset=UTF-8'}
+        return jsonify(result), 200, {'Content-Type':'application/json; charset=UTF-8'}
     if request.method == "POST":
+        json.loads(request.json)
         new_user = User(
-            id=request.args.get("id"),
-            first_name=request.args.get("first_name"),
-            last_name=request.args.get("last_name"),
-            age=request.args.get("age"),
-            email=request.args.get("email"),
-            role=request.args.get("role"),
-            phone=request.args.get("phone")
+            id=request.json("id"),
+            first_name=request.json("first_name"),
+            last_name=request.json("last_name"),
+            age=request.json("age"),
+            email=request.json("email"),
+            role=request.json("role"),
+            phone=request.json("phone")
         )
         db.session.add(new_user)
         db.session.commit()
-        return "", 204
+        return new_user, 201
 
 
-@app.route("/user/<int:id>", methods=['GET','POST', 'DELETE', 'PUT'])
+@app.route("/users/<int:id>", methods=['GET', 'DELETE', 'PUT'])
 def user(id):
-    if request.method == "GET":
-        return json.dumps(User.query.get(id).to_dict), 200,{'Content-Type':'application/json; charset=UTF-8'}
-    if request.method == "POST":
-        new_user = User(
-            id=request.args.get("id"),
-            first_name=request.args.get("first_name"),
-            last_name=request.args.get("last_name"),
-            age=request.args.get("age"),
-            email=request.args.get("email"),
-            role=request.args.get("role"),
-            phone=request.args.get("phone")
-        )
+    if not id:
+        return "id not found", 401
+    elif request.method == "GET":
+        return jsonify(User.query.get(id).to_dict), 200, {'Content-Type':'application/json; charset=UTF-8'}
+    elif request.method == 'PUT':
+        new_user = json.loads(request.data)
+        usr = User.query.get(id)
+        usr.id = new_user["id"],
+        usr.first_name = new_user["first_name"],
+        usr.last_name = new_user["last_name"],
+        usr.age = new_user["age"],
+        usr.email = new_user["email"],
+        usr.role = new_user["role"],
+        usr.phone = new_user["phone"],
         db.session.add(new_user)
+        db.session.commit()
+        return new_user, 200
+    elif request.method == 'DELETE':
+        user = User.query.get(id)
+        db.session.delete(user)
         db.session.commit()
         return "", 204
 
-
-@app.route("/orders", methods=['GET','POST'])
+@app.route("/orders", methods=['GET', 'POST'])
 def orders():
     if request.method == "GET":
         res =[]
         for ord in Order.query.all():
             res.append(ord.to_dict())
-        return json.dumps(res), 200,{'Content-Type':'application/json; charset=UTF-8'}
+        return jsonify(res), 200,{'Content-Type':'application/json; charset=UTF-8'}
     elif request.method == "POST":
-        order = json.loads(request.data)
+        json.loads(request.data)
         new_order = Order(
             id=order["id"],
             name=order["name"],
@@ -178,18 +80,18 @@ def orders():
             customer_id=order["customer_id"],
             executor_id=order["executor_id"],
         )
-        return "", 204
+        return new_order, 201
 
 
-@app.route("/order/<int:id>", methods=['GET','POST', 'DELETE', 'PUT'])
+@app.route("/orders/<int:id>", methods=['GET', 'DELETE', 'PUT'])
 def order(id):
     if request.method == "GET":
-        return json.dumps(Order.query.get(id).to_dict()), 200,{'Content-Type':'application/json; charset=UTF-8'}
+        return jsonify(Order.query.get(id).to_dict()), 200, {'Content-Type':'application/json; charset=UTF-8'}
     elif request.method == 'DELETE':
         order = Order.query.get(id)
         db.session.delete(order)
         db.session.commit()
-        return "",204
+        return "", 204
     elif request.method == 'PUT':
         order = json.loads(request.data)
         ord = Order.query.get(id)
@@ -204,30 +106,32 @@ def order(id):
         ord.executor_id = order["executor_id"]
         db.session.add(ord)
         db.session.commit()
-        return "", 204
+        return order, 204
 
 
-@app.route("/offers", methods=['GET','POST'])
+@app.route("/offers", methods=['GET', 'POST'])
 def offers():
     if request.method == "GET":
         res =[]
         for ofe in Offer.query.all():
             res.append(ofe.to_dict())
-        return json.dumps(res), 200,{'Content-Type':'application/json; charset=UTF-8'}
+        return jsonify(res), 200,{'Content-Type':'application/json; charset=UTF-8'}
     elif request.method == "POST":
-        offer = json.loads(request.data)
+        offer = json.loads(request.json)
         new_offer = Offer(
-            id=offer["id"],
-            order_id=offer["order_id"],
-            executor_id=offer["executor_id"],
+            id=request.json("id"),
+            order_id=request.json("order_id"),
+            executor_id=request.json("executor_id"),
         )
-        return "", 204
+        db.session.add(new_offer)
+        db.session.commit()
+        return new_offer, 201
 
 
-@app.route("/offer/<int:id>", methods=['GET','POST', 'DELETE', 'PUT'])
+@app.route("/offer/<int:id>", methods=['GET', 'DELETE', 'PUT'])
 def offer(id):
     if request.method == "GET":
-        return json.dumps(Offer.query.get(id).to_dict()), 200
+        return jsonify(Offer.query.get(id).to_dict()), 200
     elif request.method == 'DELETE':
         offer = Offer.query.get(id)
         db.session.delete(offer)
@@ -241,7 +145,7 @@ def offer(id):
         off.executor_id = offer["executor_id"]
         db.session.add(off)
         db.session.commit()
-        return "", 204,{'Content-Type':'application/json; charset=UTF-8'}
+        return offer, 200, {'Content-Type':'application/json; charset=UTF-8'}
 
 
 if __name__ == '__main__':
