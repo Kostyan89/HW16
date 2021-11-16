@@ -1,7 +1,8 @@
 from setup_db import db
 import raw_data
 from datetime import datetime
-
+SQLALCHEMY_DATABASE_URI = 'sqlite:///table.db'
+SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 class User(db.Model):
     __tablename__ = 'user'
@@ -61,8 +62,9 @@ class Offer(db.Model):
             "executor_id" : self.executor_id
         }
 
-    db.drop_all()
-    db.create_all()
+
+db.drop_all()
+db.create_all()
 
 
 for user_data in raw_data.users:

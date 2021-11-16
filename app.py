@@ -1,15 +1,11 @@
 import json
 from models import User, Order, Offer
 from flask import Flask, request, jsonify
-from flask_sqlalchemy import SQLAlchemy
-
-
+from setup_db import db
 app = Flask(__name__)
 app.config.from_object()
 app.url_map.strict_slashes = False
-
-
-db = SQLAlchemy(app)
+JSON_AS_ASCII = False
 
 
 @app.route('/users', methods=['GET', 'POST'])
