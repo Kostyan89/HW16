@@ -1,43 +1,12 @@
-
-app = Flask(__name__)
-app.config.from_object()
-app.url_map.strict_slashes = False
-JSON_AS_ASCII = False
-
-
-@app.route('/users', methods=['GET', 'POST'])
-def users():
-    if request.method == "GET":
-        result = []
-        for u in User.query.all():
-            result.append(u.to_dict())
-        return jsonify(result), 200, {'Content-Type':'application/json; charset=UTF-8'}
-    if request.method == "POST":
-        json.loads(request.json)
-        new_user = User(
-            id=request.json("id"),
-            first_name=request.json("first_name"),
-            last_name=request.json("last_name"),
-            age=request.json("age"),
-            email=request.json("email"),
-            role=request.json("role"),
-            phone=request.json("phone")
-        )
-        db.session.add(new_user)
-        db.session.commit()
-        return new_user, 201
-
-
 @app.route("/users/<int:id>", methods=['GET', 'DELETE', 'PUT'])
 def user(id):
     if not id:
         return "id not found", 401
     elif request.method == "GET":
-        return jsonify(User.query.get(id).to_dict), 200, {'Content-Type':'application/json; charset=UTF-8'}
+        return jsonify(User.query.get(id).to_dict)
     elif request.method == 'PUT':
         new_user = json.loads(request.data)
         usr = User.query.get(id)
-        usr.id = new_user["id"],
         usr.first_name = new_user["first_name"],
         usr.last_name = new_user["last_name"],
         usr.age = new_user["age"],
