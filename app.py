@@ -1,4 +1,3 @@
-import json
 from flask import Flask, request, jsonify, abort
 from flask_sqlalchemy import SQLAlchemy
 from config import Config
