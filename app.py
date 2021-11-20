@@ -185,3 +185,42 @@ def order(order_id):
         Order.query.filter_by(id=order_id.update(request.json))
         db.session.commit()
         return jsonify(Order.query.get_or_404(order_id).to_dict())
+
+
+@app.route("/offers", methods=['GET', 'POST'])
+def offers():
+    if request.method == "GET":
+        res =[]
+        for ofe in Offer.query.all():
+            res.append(ofe.to_dict())
+        return jsonify(res)
+    elif request.method == "POST":
+        try:
+            new_offer = Offer(
+                order_id=request.json("order_id"),
+                executor_id=request.json("executor_id"),
+            )
+            db.session.add(new_offer)
+            db.session.commit()
+            return jsonify(new_offer.to_dict()), 201
+        except KeyError:
+            abort(404)
+
+
+@app.route("/offers/<int:offer_id>", methods=['GET', 'DELETE', 'PUT'])
+def offer(offer_id):
+    if request.method == "GET":
+        return jsonify(Offer.query.get_or_404(offer_id).to_dict()), 200
+    elif request.method == 'DELETE':
+        offer = Offer.query.get_or_404(offer_id)
+        db.session.delete(offer)
+        db.session.commit()
+        return "", 204
+    elif request.method == 'PUT':
+        Offer.query.filter_by(id=offer_id).update(request.json)
+        db.session.commit()
+        return jsonify(Offer.query.get_or_404(offer_id).to_dict())
+
+
+if __name__ == '__main__':
+    app.run()
