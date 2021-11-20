@@ -4,7 +4,6 @@ from config import Config
 import raw_data
 from datetime import datetime
 
-
 app = Flask(__name__)
 app.config.from_object(Config)
 
@@ -23,7 +22,7 @@ class User(db.Model):
 
     def to_dict(self):
         return {
-            "id" : self.id,
+            "id": self.id,
             "first.name": self.first_name,
             "last_name": self.last_name,
             "age": self.age,
@@ -47,7 +46,7 @@ class Order(db.Model):
 
     def to_dict(self):
         return {
-            "id" : self.id,
+            "id": self.id,
             "name": self.name,
             "description": self.description,
             "start_date": self.start_date.strf('%d/%m/%Y'),
@@ -61,15 +60,15 @@ class Order(db.Model):
 
 class Offer(db.Model):
     __tablename__ = 'offer'
-    id = db.Column(db.Integer, primary_key=True,autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     order_id = db.Column(db.Integer, db.ForeignKey('order.id'))
     executor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     def to_dict(self):
         return {
-            "id" : self.id,
-            "order_id" : self.order_id,
-            "executor_id" : self.executor_id
+            "id": self.id,
+            "order_id": self.order_id,
+            "executor_id": self.executor_id
         }
 
 
@@ -140,8 +139,8 @@ def user(user_id):
         db.session.commit()
         return jsonify(User.query.get_or_404(user_id).to_dict())
     elif request.method == 'DELETE':
-        user = User.query.get_or_404(user_id)
-        db.session.delete(user)
+        _user = User.query.get_or_404(user_id)
+        db.session.delete(_user)
         db.session.commit()
         return "", 204
 
@@ -174,10 +173,11 @@ def orders():
 @app.route("/orders/<int:order_id>", methods=['GET', 'DELETE', 'PUT'])
 def order(order_id):
     if request.method == "GET":
-        return jsonify(Order.query.get_or_404(order_id).to_dict()), 200, {'Content-Type':'application/json; charset=UTF-8'}
+        return jsonify(Order.query.get_or_404(order_id).to_dict()), 200, {
+            'Content-Type': 'application/json; charset=UTF-8'}
     elif request.method == 'DELETE':
-        order = Order.query.get_or_404(order_id)
-        db.session.delete(order)
+        _order = Order.query.get_or_404(order_id)
+        db.session.delete(_order)
         db.session.commit()
         return "", 204
     elif request.method == 'PUT':
@@ -189,7 +189,7 @@ def order(order_id):
 @app.route("/offers", methods=['GET', 'POST'])
 def offers():
     if request.method == "GET":
-        res =[]
+        res = []
         for ofe in Offer.query.all():
             res.append(ofe.to_dict())
         return jsonify(res)
