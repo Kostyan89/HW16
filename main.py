@@ -1,7 +1,4 @@
-import json
-from models import User, Order, Offer
-from flask import Flask, request, jsonify
-from setup_db import db
+
 app = Flask(__name__)
 app.config.from_object()
 app.url_map.strict_slashes = False
