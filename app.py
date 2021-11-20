@@ -1,5 +1,5 @@
 import json
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, abort
 from flask_sqlalchemy import SQLAlchemy
 from config import Config
 import raw_data
@@ -116,37 +116,72 @@ def users():
             result.append(u.to_dict())
         return jsonify(result)
     if request.method == "POST":
-        new_user = User(
-            first_name=request.json["first_name"],
-            last_name=request.json["last_name"],
-            age=request.json["age"],
-            email=request.json["email"],
-            role=request.json["role"],
-            phone=request.json["phone"]
-        )
-        db.session.add(new_user)
-        db.session.commit()
-        return new_user, 201
+        try:
+            new_user = User(
+                first_name=request.json["first_name"],
+                last_name=request.json["last_name"],
+                age=request.json["age"],
+                email=request.json["email"],
+                role=request.json["role"],
+                phone=request.json["phone"]
+            )
+            db.session.add(new_user)
+            db.session.commit()
+            return jsonify(new_user.to_dict()), 201
+        except KeyError:
+            abort(404)
 
 
-@app.route("/users/<int:id>", methods=['GET', 'DELETE', 'PUT'])
-def user(id):
+@app.route("/users/<int:user_id>", methods=['GET', 'DELETE', 'PUT'])
+def user(user_id):
     if request.method == "GET":
-        return jsonify(User.query.get(id).to_dict())
+        return jsonify(User.query.get_or_404(user_id).to_dict())
     elif request.method == 'PUT':
-        new_user = json.loads(request.data)
-        usr = User.query.get(id)
-        usr.first_name = new_user["first_name"],
-        usr.last_name = new_user["last_name"],
-        usr.age = new_user["age"],
-        usr.email = new_user["email"],
-        usr.role = new_user["role"],
-        usr.phone = new_user["phone"],
-        db.session.add(new_user)
+        User.query.filter_by(id=user_id).update(request.json)
         db.session.commit()
-        return new_user, 200
+        return jsonify(User.query.get_or_404(user_id).to_dict())
     elif request.method == 'DELETE':
-        user = User.query.get(id)
+        user = User.query.get_or_404(user_id)
         db.session.delete(user)
         db.session.commit()
         return "", 204
+
+
+@app.route("/orders", methods=['GET', 'POST'])
+def orders():
+    if request.method == "GET":
+        result = []
+        for o in Order.query.all():
+            result.append(o.to_dict())
+        return jsonify(result)
+    elif request.method == "POST":
+        try:
+            new_order = Order(
+                name=order["name"],
+                description=order["description"],
+                start_date=order["start_date"],
+                end_date=order["end_date"].strftime('%m/%d/%Y'),
+                address=order["address"].strftime('%m/%d/%Y'),
+                price=order["price"],
+                customer_id=order["customer_id"],
+                executor_id=order["executor_id"])
+            db.session.add(new_order)
+            db.session.commit()
+            return jsonify(new_order.to_dict()), 201
+        except KeyError:
+            abort(404)
+
+
+@app.route("/orders/<int:order_id>", methods=['GET', 'DELETE', 'PUT'])
+def order(order_id):
+    if request.method == "GET":
+        return jsonify(Order.query.get_or_404(order_id).to_dict()), 200, {'Content-Type':'application/json; charset=UTF-8'}
+    elif request.method == 'DELETE':
+        order = Order.query.get_or_404(order_id)
+        db.session.delete(order)
+        db.session.commit()
+        return "", 204
+    elif request.method == 'PUT':
+        Order.query.filter_by(id=order_id.update(request.json))
+        db.session.commit()
+        return jsonify(Order.query.get_or_404(order_id).to_dict())
