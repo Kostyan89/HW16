@@ -7,7 +7,7 @@ from datetime import datetime
 app = Flask(__name__)
 app.config.from_object(Config)
 
-db = SQLAlchemy()
+db = SQLAlchemy(app)
 
 
 class User(db.Model):
@@ -157,9 +157,9 @@ def orders():
             new_order = Order(
                 name=order["name"],
                 description=order["description"],
-                start_date=order["start_date"],
+                start_date=order["start_date"].strftime('%m/%d/%Y'),
                 end_date=order["end_date"].strftime('%m/%d/%Y'),
-                address=order["address"].strftime('%m/%d/%Y'),
+                address=order["address"],
                 price=order["price"],
                 customer_id=order["customer_id"],
                 executor_id=order["executor_id"])
